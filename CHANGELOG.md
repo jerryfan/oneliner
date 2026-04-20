@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.9 - 2026-04-20
+
+### Changed
+- Locale badge now resolves the active pi-i18n locale at render time so it does not freeze at startup.
+
 ## 1.1.8 - 2026-04-20
 
 ### Changed
