@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.8 - 2026-04-20
+
+### Changed
+- Locale badge now re-reads the active pi-i18n locale on render so it stays current after startup.
+
 ## 1.1.7 - 2026-04-20
 
 ### Changed

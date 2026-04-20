@@ -1059,7 +1059,9 @@ export default function oneliner(pi: ExtensionAPI): void {
 				invalidate() {},
 				render(width: number): string[] {
 					// Always show a tiny locale badge on the far right.
-					const badgeText = localeBadge(lastLocale, width);
+					bindI18n();
+					const activeLocale = piI18n?.getLocale?.() ?? lastLocale;
+					const badgeText = localeBadge(activeLocale, width);
 					const badge = theme.fg("dim", badgeText);
 					const badgeW = visibleWidth(badge);
 					if (width <= badgeW) return [truncateToWidth(badge, width, "…")];
