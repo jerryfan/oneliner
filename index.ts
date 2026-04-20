@@ -169,16 +169,25 @@ function sanitizeStatusInline(text: string): string {
 }
 
 function localeBadge(locale: string | undefined): string {
-	const raw = String(locale ?? "en").trim();
+	const raw = String(locale ?? "en").trim().replace(/_/g, "-");
 	const l = raw.toLowerCase();
-
-	// MVP: explicit badges for the first two locales.
-	if (l === "zh-tw" || l.startsWith("zh-tw")) return "繁體";
-	if (l === "en" || l.startsWith("en-")) return "en";
-
-	// Reasonable defaults for other locales.
-	if (l.startsWith("zh")) return "中文";
 	const base = l.split(/[-_]/)[0] || "en";
+
+	// Prefer native/autonym labels where reasonable (status bar should show native chars).
+	// Keep these intentionally short: they consume footer width.
+	if (l === "zh-tw" || l.startsWith("zh-tw") || l.startsWith("zh-hant")) return "繁體";
+	if (l === "zh-cn" || l.startsWith("zh-cn") || l.startsWith("zh-hans")) return "简体";
+	if (base === "zh") return "中文";
+
+	if (base === "ja") return "日本語";
+	if (base === "ko") return "한국어";
+	if (base === "es") return "Español";
+	if (l === "pt-br" || base === "pt") return "Português";
+	if (base === "fr") return "Français";
+	if (base === "de") return "Deutsch";
+	if (base === "en") return "English";
+
+	// Fallback: show a stable code-like badge.
 	return base.slice(0, 2);
 }
 

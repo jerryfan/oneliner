@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.6 - 2026-04-20
+
+### Changed
+- Locale badge now shows native language labels (e.g. 日本語, 한국어, Español) instead of 2-letter codes.
+
 ## 1.1.5 - 2026-04-20
 
 ### Added
