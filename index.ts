@@ -229,23 +229,118 @@ function sanitizeStatusInline(text: string): string {
 	return s.replace(/ +/g, " ").trim();
 }
 
-function localeBadge(locale: string | undefined, _maxWidth?: number): string {
-	// Footer should be glanceable in multi-window layouts: keep locale to 1–2 chars.
-	const raw = String(locale ?? "en").trim().replace(/_/g, "-");
-	const l = raw.toLowerCase();
-	const parts = l.split("-").filter(Boolean);
-	const lang = parts[0] || "en";
-	const region = parts[1] || "";
+const LOCALE_BADGE_BY_TAG: Record<string, string> = {
+	// Chinese + major CJK: use native endonyms
+	"zh-TW": "繁體",
+	"zh-HK": "繁體",
+	"zh-MO": "繁體",
+	"zh-Hant": "繁體",
+	"zh-CN": "简体",
+	"zh-SG": "简体",
+	"zh-Hans": "简体",
+	"zh": "中文",
+	"ja": "日本語",
+	"ko": "한국어",
 
-	// Prefer region hints for common Chinese variants.
+	// Everything else: stable short tags (major languages included even if untranslated)
+	"en": "en",
+	"en-SG": "sg",
+	"sg": "sg",
+	"es": "es",
+	"de": "de",
+	"fr": "fr",
+	"it": "it",
+	"pt": "pt",
+	"pt-BR": "pt-BR",
+	"pt-PT": "pt-PT",
+	"nl": "nl",
+	"sv": "sv",
+	"da": "da",
+	"no": "no",
+	"nb": "nb",
+	"nn": "nn",
+	"fi": "fi",
+	"pl": "pl",
+	"cs": "cs",
+	"sk": "sk",
+	"hu": "hu",
+	"ro": "ro",
+	"bg": "bg",
+	"uk": "uk",
+	"ru": "ru",
+	"sr": "sr",
+	"hr": "hr",
+	"sl": "sl",
+	"tr": "tr",
+	"el": "el",
+	"ca": "ca",
+	"id": "id",
+	"ms": "ms",
+	"vi": "vi",
+	"th": "th",
+	"fil": "fil",
+	"tl": "tl",
+	"hi": "hi",
+	"bn": "bn",
+	"pa": "pa",
+	"mr": "mr",
+	"ta": "ta",
+	"te": "te",
+	"gu": "gu",
+	"kn": "kn",
+	"ml": "ml",
+	"ur": "ur",
+	"fa": "fa",
+	"ar": "ar",
+	"he": "he",
+	"sw": "sw",
+};
+
+function canonicalizeLocaleTagForBadge(locale: string): string {
+	const raw = String(locale ?? "").trim().replace(/_/g, "-");
+	const parts = raw.split("-").filter(Boolean);
+	if (parts.length === 0) return "en";
+
+	const out: string[] = [];
+	for (let i = 0; i < parts.length; i++) {
+		const p = parts[i] ?? "";
+		if (i === 0) {
+			out.push(p.toLowerCase());
+			continue;
+		}
+		if (/^[a-zA-Z]{4}$/.test(p)) {
+			out.push(p.slice(0, 1).toUpperCase() + p.slice(1).toLowerCase()); // script
+			continue;
+		}
+		if (/^[a-zA-Z]{2}$/.test(p) || /^\d{3}$/.test(p)) {
+			out.push(p.toUpperCase()); // region
+			continue;
+		}
+		out.push(p);
+	}
+	return out.join("-");
+}
+
+function localeBadge(locale: string | undefined, maxWidth?: number): string {
+	const tag = canonicalizeLocaleTagForBadge(locale ?? "en");
+	const [lang, maybeSub] = tag.split("-");
+
+	// Chinese: bucket script/region variants.
 	if (lang === "zh") {
-		if (region === "tw" || l.includes("hant")) return "Tw";
-		if (region === "cn" || l.includes("hans")) return "Cn";
-		return "Zh";
+		const sub = String(maybeSub ?? "");
+		if (sub === "TW" || sub === "HK" || sub === "MO" || sub === "Hant") return "繁體";
+		if (sub === "CN" || sub === "SG" || sub === "Hans") return "简体";
+		const base = LOCALE_BADGE_BY_TAG[tag] ?? LOCALE_BADGE_BY_TAG["zh"] ?? "zh";
+		return typeof maxWidth === "number" && maxWidth > 0 ? truncateToWidth(base, maxWidth, "…") : base;
 	}
 
-	const two = (lang.slice(0, 1).toUpperCase() + lang.slice(1, 2).toLowerCase()).slice(0, 2);
-	return two || "En";
+	// Prefer full tag, then primary language.
+	let badge = LOCALE_BADGE_BY_TAG[tag] ?? LOCALE_BADGE_BY_TAG[lang ?? ""] ?? (lang || "en");
+	badge = badge.trim() || "en";
+	if (typeof maxWidth === "number" && maxWidth > 0 && visibleWidth(badge) > maxWidth) {
+		badge = truncateToWidth(badge, maxWidth, "…");
+	}
+	return badge;
 }
 
 function clampPct(v: number): number {
