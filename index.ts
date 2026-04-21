@@ -897,7 +897,9 @@ export default function oneliner(pi: ExtensionAPI): void {
 
 				const keepSymbols = (key: string): boolean => {
 					const k = key.toLowerCase();
-					return k === "govern" || k === "yo" || k === "igotchu"; // legacy compat
+					// Some extensions intentionally encode state as compact glyph+tag.
+					// If we strip symbols, the status becomes meaningless or disappears.
+					return k === "govern" || k === "yo" || k === "igotchu" || k === "pi-semantic";
 				};
 
 				let entries = Array.from(statuses.entries())
@@ -918,14 +920,18 @@ export default function oneliner(pi: ExtensionAPI): void {
 					if (entries.length === 0) return null;
 				}
 
-				// Always prioritize yo first.
+				// Prioritize key mode indicators first (stable + glanceable).
 				entries = entries.sort((a, b) => {
 					const ak = a[0].toLowerCase();
 					const bk = b[0].toLowerCase();
 					if (ak === "yo") return -1;
 					if (bk === "yo") return 1;
+					if (ak === "pi-semantic") return -1;
+					if (bk === "pi-semantic") return 1;
 					if (ak === "govern") return -1;
 					if (bk === "govern") return 1;
+					if (ak === "igotchu") return -1;
+					if (bk === "igotchu") return 1;
 					return 0;
 				});
 
@@ -941,6 +947,18 @@ export default function oneliner(pi: ExtensionAPI): void {
 						if (g === "◑" || g === "◔") return theme.fg("warning", short);
 						if (g === "◕" || g === "●") return theme.fg("success", short);
 						return theme.fg("text", short);
+					}
+
+					if (k === "pi-semantic") {
+						// pi-semantic badge policy:
+						// - off: red + bold
+						// - prose: yellow
+						// - terse/dense/ooga/wenyan: green
+						if (glyph === "×" || glyph === "✕" || glyph === "x" || glyph === "X") {
+							return theme.fg("error", theme.bold(short));
+						}
+						if (glyph === "○") return theme.fg("warning", short);
+						return theme.fg("success", short);
 					}
 
 					if (k === "yo" || k === "igotchu") {
@@ -960,8 +978,9 @@ export default function oneliner(pi: ExtensionAPI): void {
 				if (mode === "count") {
 					// Compact mode: show the highest-signal status only (no "+N" spill).
 					const yoEntry = entries.find(([k]) => k.toLowerCase() === "yo");
+					const semEntry = entries.find(([k]) => k.toLowerCase() === "pi-semantic");
 					const governEntry = entries.find(([k]) => k.toLowerCase() === "govern");
-					const chosen = yoEntry ?? governEntry ?? entries[0];
+					const chosen = yoEntry ?? semEntry ?? governEntry ?? entries[0];
 					rendered = chosen ? renderOne(chosen[0], chosen[1]) : theme.fg("dim", "0");
 				} else {
 					const maxVisible = Math.max(1, Math.min(6, opts?.maxVisible ?? 3));
@@ -1146,8 +1165,8 @@ export default function oneliner(pi: ExtensionAPI): void {
 					let reserved = badgeW + 1;
 					if (layoutNow === "sessionFirst") {
 						const maxStatusW = Math.max(0, Math.min(30, width - badgeW - 2));
-						const onlyKeys = presetNow === "ultra" ? ["govern"] : ["yo", "igotchu", "govern"];
-						const maxVisible = presetNow === "ultra" ? 1 : 2;
+						const onlyKeys = presetNow === "ultra" ? ["pi-semantic", "govern"] : ["pi-semantic", "yo", "igotchu", "govern"];
+						const maxVisible = presetNow === "ultra" ? 1 : 3;
 						const status = maxStatusW > 0 ? buildStatusesSegment(maxStatusW, "text", { onlyKeys, maxVisible }) : null;
 						const rightCandidate = status ? `${status} ${badge}` : badge;
 						const rightW = visibleWidth(rightCandidate);

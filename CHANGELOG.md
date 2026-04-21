@@ -1,9 +1,16 @@
 # Changelog
 
+## 1.3.1 - 2026-04-21
+
+### Fixed
+- Footer now shows `pi-semantic` status badge in session-first layout.
+- Preserves `pi-semantic` glyph+tag statuses (no aggressive symbol stripping).
+- Colors `pi-semantic` badges by glyph (off=red, prose=yellow, compressed=green).
+
 ## 1.3.0 - 2026-04-21
 
 ### Changed
-- npm package renamed to `@jrryfn/pi-oneliner`.
+- npm package renamed to `pi-oneliner`.
 - Session name is now plain text in session-first layout.
 - Short cwd mode now shows the last two path segments, e.g. `code\pi` for `C:\code\pi`.
 
@@ -62,8 +69,8 @@
 ## 1.1.1 - 2026-04-19
 
 ### Fixed
-- npm package identity corrected to `@jrryfn/oneliner`.
-- README install instructions updated to scoped package name.
+- npm package identity corrected to `pi-oneliner`.
+- README install instructions updated to root package name.
 
 ## 1.1.0 - 2026-04-19
 

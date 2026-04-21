@@ -9,7 +9,7 @@ One-line sticky footer extension for [pi coding agent](https://github.com/marioz
 > Important: install with `pi install`, **not** `npm install`.
 
 ```bash
-pi install npm:@jrryfn/pi-oneliner
+pi install npm:pi-oneliner
 ```
 
 Then in pi:
@@ -22,21 +22,21 @@ Then in pi:
 Project-local install (shared in `.pi/settings.json`):
 
 ```bash
-pi install -l npm:@jrryfn/pi-oneliner
+pi install -l npm:pi-oneliner
 ```
 
 ## Fast troubleshooting
 
 - **"Package not found"**
-  - Use the full scoped name: `npm:@jrryfn/pi-oneliner`
+  - Use the full package name: `npm:pi-oneliner`
 - **Installed but `/oneliner` is unknown**
   - Run `/reload` (or restart pi)
 - **Installed old package name before**
   - Remove old package, then reinstall:
 
 ```bash
-pi remove npm:@jrryfn/oneliner
-pi install npm:@jrryfn/pi-oneliner
+pi remove npm:pi-oneliner
+pi install npm:pi-oneliner
 ```
 
 ## Commands

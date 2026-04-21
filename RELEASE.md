@@ -43,5 +43,5 @@ npm publish --access public
 - Tag: `pi-oneliner-v<version>`
 - GitHub release notes include changelog excerpt + screenshot/GIF
 - Add npm install snippet to release body:
-  - `pi install npm:@jrryfn/pi-oneliner`
+  - `pi install npm:pi-oneliner`
 
