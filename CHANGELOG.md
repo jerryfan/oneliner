@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1 - 2026-04-21
+
+### Fixed
+- `/oneliner statuses` now toggles the effective status setting (`status.enabled`), not only the legacy `showStatuses`.
+- `/oneliner toggle` and `/oneliner statuses` now also print the available options (`usage`).
+- Status badge readability: insert a space after leading glyphs (e.g. `×of` → `× of`).
+
 ## 1.4.0 - 2026-04-21
 
 ### Added

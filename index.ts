@@ -485,6 +485,13 @@ export default function oneliner(pi: ExtensionAPI): void {
 
 	const onOff = (on: boolean) => (on ? t("state.on") : t("state.off"));
 
+	const statusesEnabled = (): boolean => config.status?.enabled ?? config.showStatuses ?? DEFAULT_CONFIG.status.enabled ?? true;
+	const setStatusesEnabled = (enabled: boolean): void => {
+		config.showStatuses = enabled; // keep legacy field in sync
+		config.status = { ...(config.status ?? {}), enabled };
+	};
+
+
 	bindI18n();
 
 	function writeConfigPatch(patch: Partial<OnelinerConfig>): { success: boolean; error?: string } {
@@ -509,7 +516,7 @@ export default function oneliner(pi: ExtensionAPI): void {
 
 	function applyZenMode(ctx: any): void {
 		preset = "compact";
-		config.showStatuses = false;
+		setStatusesEnabled(false);
 		ctx.ui.notify(t("notify.zenApplied"), "info");
 	}
 
@@ -521,7 +528,7 @@ export default function oneliner(pi: ExtensionAPI): void {
 		if (!["full", "compact", "ultra"].includes(String(config.preset))) problems.push(t("doctor.problem.presetInvalid"));
 
 		if (problems.length === 0) {
-			ctx.ui.notify(t("doctor.healthy", { preset, state: onOff(config.showStatuses) }), "info");
+			ctx.ui.notify(t("doctor.healthy", { preset, state: onOff(statusesEnabled()) }), "info");
 			return;
 		}
 
@@ -585,7 +592,7 @@ export default function oneliner(pi: ExtensionAPI): void {
 				},
 				{
 					value: "toggle-statuses",
-					label: t("picker.statuses.label", { state: onOff(config.showStatuses) }),
+					label: t("picker.statuses.label", { state: onOff(statusesEnabled()) }),
 					description: t("picker.statuses.desc"),
 				},
 				{
@@ -666,8 +673,8 @@ export default function oneliner(pi: ExtensionAPI): void {
 
 		switch (action) {
 			case "toggle-statuses": {
-				config.showStatuses = !config.showStatuses;
-				ctx.ui.notify(t("notify.statuses", { state: onOff(config.showStatuses) }), "info");
+				setStatusesEnabled(!statusesEnabled());
+				ctx.ui.notify(t("notify.statuses", { state: onOff(statusesEnabled()) }), "info");
 				return;
 			}
 			case "zen": {
@@ -705,7 +712,8 @@ export default function oneliner(pi: ExtensionAPI): void {
 			case "save": {
 				const res = writeConfigPatch({
 					preset,
-					showStatuses: config.showStatuses,
+					showStatuses: statusesEnabled(),
+					status: config.status,
 					maxSessionLen: config.maxSessionLen,
 					maxBranchLen: config.maxBranchLen,
 					maxCwdLen: config.maxCwdLen,
@@ -762,13 +770,14 @@ export default function oneliner(pi: ExtensionAPI): void {
 		}
 
 		if (a === "show" || a === "status") {
-			ctx.ui.notify(t("notify.show", { preset, state: onOff(config.showStatuses) }), "info");
+			ctx.ui.notify(t("notify.show", { preset, state: onOff(statusesEnabled()) }), "info");
 			return;
 		}
 
 		if (a === "toggle") {
 			preset = nextPreset(preset);
 			ctx.ui.notify(t("notify.preset", { preset }), "info");
+			ctx.ui.notify(t("usage"), "info");
 			return;
 		}
 
@@ -779,8 +788,9 @@ export default function oneliner(pi: ExtensionAPI): void {
 		}
 
 		if (a === "statuses") {
-			config.showStatuses = !config.showStatuses;
-			ctx.ui.notify(t("notify.statuses", { state: onOff(config.showStatuses) }), "info");
+			setStatusesEnabled(!statusesEnabled());
+			ctx.ui.notify(t("notify.statuses", { state: onOff(statusesEnabled()) }), "info");
+			ctx.ui.notify(t("usage"), "info");
 			return;
 		}
 
@@ -797,7 +807,8 @@ export default function oneliner(pi: ExtensionAPI): void {
 		if (a === "save" || a === "persist") {
 			const res = writeConfigPatch({
 				preset,
-				showStatuses: config.showStatuses,
+				showStatuses: statusesEnabled(),
+				status: config.status,
 				maxSessionLen: config.maxSessionLen,
 				maxBranchLen: config.maxBranchLen,
 				maxCwdLen: config.maxCwdLen,
@@ -1007,7 +1018,11 @@ export default function oneliner(pi: ExtensionAPI): void {
 
 				const renderOne = (_key: string, text: string): string => {
 					const maxStatus = 18;
-					const short = text.length <= maxStatus ? text : `${text.slice(0, maxStatus - 1)}…`;
+					// If a status starts with a known glyph (e.g. "×of"), insert a space for readability ("× of").
+					// Keeps existing spacing unchanged.
+					const trimmed = text.trim();
+					const normalized = trimmed.replace(/^([○◔◑◕●×✕xX])([A-Za-z0-9])/u, "$1 $2");
+					const short = normalized.length <= maxStatus ? normalized : `${normalized.slice(0, maxStatus - 1)}…`;
 					const glyph = short.trim().charAt(0);
 
 					// Generic glyph coloring (no extension hardcoding).
